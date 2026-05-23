@@ -1,0 +1,2074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAM — Breadcrumbs Tablet Experience</title>
+<style>
+  @font-face { font-family:"Self Modern"; src:url("file:///Users/kinjalvora/Downloads/SAM Game Design System/fonts/SelfModern.ttf") format("truetype"); font-weight:400; font-style:normal; }
+  @font-face { font-family:"Cosmica"; src:url("file:///Users/kinjalvora/Downloads/SAM Game Design System/fonts/Cosmica-Book.otf") format("opentype"); font-weight:400; font-style:normal; }
+  @font-face { font-family:"Cosmica"; src:url("file:///Users/kinjalvora/Downloads/SAM Game Design System/fonts/Cosmica-Medium.otf") format("opentype"); font-weight:500; font-style:normal; }
+  @font-face { font-family:"Cosmica"; src:url("file:///Users/kinjalvora/Downloads/SAM Game Design System/fonts/Cosmica-Semibold.otf") format("opentype"); font-weight:600; font-style:normal; }
+  @font-face { font-family:"Cosmica"; src:url("file:///Users/kinjalvora/Downloads/SAM Game Design System/fonts/Cosmica-Bold.otf") format("opentype"); font-weight:700; font-style:normal; }
+  @font-face { font-family:"Cosmica"; src:url("file:///Users/kinjalvora/Downloads/SAM Game Design System/fonts/Cosmica-Heavy.otf") format("opentype"); font-weight:800; font-style:normal; }
+  @font-face { font-family:"Cosmica Mono"; src:url("file:///Users/kinjalvora/Downloads/SAM Game Design System/fonts/CosmicaMono-Book.ttf") format("truetype"); font-weight:400; font-style:normal; }
+  @font-face { font-family:"Cosmica Mono"; src:url("file:///Users/kinjalvora/Downloads/SAM Game Design System/fonts/CosmicaMono-Medium.ttf") format("truetype"); font-weight:500; font-style:normal; }
+  @font-face { font-family:"Cosmica Mono"; src:url("file:///Users/kinjalvora/Downloads/SAM Game Design System/fonts/CosmicaMono-Bold.ttf") format("truetype"); font-weight:700; font-style:normal; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: #1a1a1a;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cosmica', system-ui, sans-serif;
+    overflow: hidden;
+  }
+
+  /* Tablet shell */
+  .tablet-shell {
+    width: 768px;
+    height: 1024px;
+    background: #111;
+    border-radius: 32px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.10);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .tablet-screen {
+    position: absolute;
+    inset: 10px;
+    border-radius: 22px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  #root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+  .twk-field{appearance:none;width:100%;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
+    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
+    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
+    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
+    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2}
+`;
+
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+  }, []);
+  return [values, setTweak];
+}
+
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    offsetRef.current = {
+      x: Math.min(Math.max(PAD, window.innerWidth - w - PAD), Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(Math.max(PAD, window.innerHeight - h - PAD), Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+  const dismiss = () => { setOpen(false); window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*'); };
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = { x: startRight - (ev.clientX - sx), y: startBottom - (ev.clientY - sy) };
+      clampToViewport();
+    };
+    const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" onMouseDown={e => e.stopPropagation()} onClick={dismiss}>✕</button>
+        </div>
+        <div className="twk-body">{children}</div>
+      </div>
+    </>
+  );
+}
+
+function TweakSection({ label }) { return <div className="twk-sect">{label}</div>; }
+
+function TweakRow({ label, children }) {
+  return (
+    <div className="twk-row">
+      <div className="twk-lbl"><span>{label}</span></div>
+      {children}
+    </div>
+  );
+}
+
+function TweakText({ label, value, placeholder, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <input className="twk-field" type="text" value={value} placeholder={placeholder}
+             onChange={e => onChange(e.target.value)} />
+    </TweakRow>
+  );
+}
+
+function TweakSelect({ label, value, options, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <select className="twk-field" value={value} onChange={e => onChange(e.target.value)}>
+        {options.map(o => {
+          const v = typeof o === 'object' ? o.value : o;
+          const l = typeof o === 'object' ? o.label : o;
+          return <option key={v} value={v}>{l}</option>;
+        })}
+      </select>
+    </TweakRow>
+  );
+}
+
+Object.assign(window, { useTweaks, TweaksPanel, TweakSection, TweakText, TweakSelect });
+</script>
+
+<script type="text/babel">
+
+/* ─────────────────────────────────────────
+   DESIGN TOKENS — SAM Play design system
+   Dark-mode-first, charcoal ground, cream ink,
+   vermillion accent. Self Modern display,
+   Cosmica body, Cosmica Mono labels.
+───────────────────────────────────────── */
+const T = {
+  /* Ground / surfaces */
+  paper:        '#323131',   /* bone — main bg */
+  paperDim:     '#3D3C3C',   /* chalk — card surface */
+  paperDeep:    '#2A2929',   /* paper — deeper alt */
+
+  /* Ink (light on dark) */
+  ink:          '#F4EFE2',   /* warm cream — primary text */
+  inkSoft:      '#C9C3B3',   /* ink-2 — secondary text */
+  inkMid:       '#8C887D',   /* ink-3 — tertiary / meta */
+  inkFaint:     '#5A5854',   /* ink-4 — disabled */
+  rule:         '#8C887D',   /* ink-3 — rules / dividers */
+
+  /* Accent */
+  highlight:    '#C8341A',   /* vermillion — loud accent */
+  highlightDeep:'#9E2410',   /* vermillion-deep */
+};
+
+const SANS  = "'Cosmica', system-ui, sans-serif";
+const SERIF = "'Self Modern', Georgia, serif";
+const MONO  = "'Cosmica Mono', 'JetBrains Mono', ui-monospace, monospace";
+
+/* ─────────────────────────────────────────
+   SHARED UTILITIES
+───────────────────────────────────────── */
+const useScaleToFit = (w, h) => {
+  const [scale, setScale] = React.useState(1);
+  React.useEffect(() => {
+    const calc = () => {
+      const sw = window.innerWidth / (w + 60);
+      const sh = window.innerHeight / (h + 60);
+      setScale(Math.min(sw, sh, 1));
+    };
+    calc();
+    window.addEventListener('resize', calc);
+    return () => window.removeEventListener('resize', calc);
+  }, [w, h]);
+  return scale;
+};
+
+/* SAM logo image
+   inverted=false → sam-logo.png       (use on light/cream backgrounds)
+   inverted=true  → sam-logo-inverted.png (use on dark backgrounds)        */
+function SamLogo({ height = 56, inverted = false, fallbackColor }) {
+  const [err, setErr] = React.useState(false);
+  const src = inverted ? './sam-logo-inverted.png' : './sam-logo.png';
+  const fbColor = fallbackColor || (inverted ? T.ink : T.paper);
+  React.useEffect(() => { setErr(false); }, [src]);
+  if (err) return <Wordmark size={Math.round(height * 0.5)} color={fbColor} />;
+  return (
+    <img
+      src={src}
+      onError={() => setErr(true)}
+      style={{ height, display: 'block', objectFit: 'contain' }}
+    />
+  );
+}
+
+/* Wordmark — SAM logotype treatment */
+function Wordmark({ size = 26, color = T.ink }) {
+  return (
+    <div style={{
+      fontFamily: SANS, fontWeight: 700, fontSize: size,
+      letterSpacing: '0.18em', color, lineHeight: 1,
+      display: 'inline-flex', alignItems: 'center', gap: 10,
+      textTransform: 'uppercase',
+    }}>
+      <span>SAM</span>
+      <span style={{
+        width: 8, height: 8, background: T.highlight, borderRadius: '50%',
+        display: 'inline-block', flexShrink: 0,
+      }}/>
+    </div>
+  );
+}
+
+/* Mono label — uppercase tracked */
+function MonoLabel({ children, color, style = {} }) {
+  return (
+    <div style={{
+      fontFamily: MONO, fontWeight: 500, fontSize: 11,
+      letterSpacing: '0.08em', textTransform: 'uppercase',
+      color: color || T.inkMid, ...style,
+    }}>{children}</div>
+  );
+}
+
+/* Primary pill button — cream bg, charcoal text (or outline variant) */
+function PillButton({ onClick, disabled, children, variant = 'primary', style = {} }) {
+  const styles = {
+    primary:  { background: T.ink,       color: T.paper,  border: `2px solid ${T.ink}` },
+    secondary:{ background: T.paperDim,  color: T.ink,    border: `2px solid ${T.ink}` },
+    outline:  { background: 'transparent', color: T.ink,  border: `2px solid ${T.ink}` },
+    accent:   { background: T.highlight, color: T.paper,  border: `2px solid ${T.highlight}` },
+  };
+  const v = styles[variant] || styles.primary;
+  return (
+    <button onClick={onClick} disabled={disabled} style={{
+      fontFamily: SANS, fontWeight: 600, fontSize: 16,
+      letterSpacing: '0.01em',
+      padding: '18px 28px',
+      borderRadius: 999,
+      ...v,
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      transition: `transform 280ms cubic-bezier(0.34,1.56,0.64,1)`,
+      opacity: disabled ? 0.4 : 1,
+      width: '100%',
+      ...style,
+    }}
+      onMouseEnter={e => { if (!disabled) e.currentTarget.style.transform = 'scale(1.02)'; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+      onMouseDown={e => { if (!disabled) e.currentTarget.style.transform = 'scale(0.96)'; }}
+      onMouseUp={e => { if (!disabled) e.currentTarget.style.transform = 'scale(1.02)'; }}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* Thin rule */
+function Rule({ my = 24, color }) {
+  return <div style={{ height: 1, background: color || T.rule, marginTop: my, marginBottom: my, width: '100%' }} />;
+}
+
+/* ─────────────────────────────────────────
+   TRIVIA DATA
+───────────────────────────────────────── */
+const TRIVIA = [
+  {
+    index: '01',
+    fact: 'The artist, Utagawa Kunisada, was more famous in his lifetime than Katsushika Hokusai — the artist behind The Great Wave off Kanagawa.',
+    // Left panel — standing man with folding fan, seated observers; shows the artistry of the composition
+    zoom: { size: '310%', pos: '18% 48%' },
+  },
+  {
+    index: '02',
+    fact: 'In Kabuki, female roles were traditionally performed by men called onnagata. The elegantly dressed central figure may actually be a male actor portraying a woman.',
+    // Tight zoom on the central standing figure in the floral purple robe
+    zoom: { size: '520%', pos: '50% 20%' },
+  },
+  {
+    index: '03',
+    fact: 'Everyone appears to be reacting to a tense private conversation — or a dramatic reveal — unfolding somewhere just off the edge of the print.',
+    // Right panel — figures glancing toward the edge; mysterious framed portrait in the corner
+    zoom: { size: '380%', pos: '82% 46%' },
+  },
+];
+
+/* ─────────────────────────────────────────
+   TRIVIA SCREEN — shown after unlock, before mission 1
+   Tap anywhere to advance; last fact → onDone
+   Background: full-bleed painting, pans + zooms per fact
+───────────────────────────────────────── */
+function TriviaScreen({ teamName, onDone }) {
+  const [idx, setIdx] = React.useState(0);
+  const [animKey, setAnimKey] = React.useState(0);
+  const [bridgeShown, setBridgeShown] = React.useState(false);
+
+  const advance = () => {
+    if (idx < TRIVIA.length - 1) {
+      setIdx(i => i + 1);
+      setAnimKey(k => k + 1);
+    } else if (!bridgeShown) {
+      /* First tap on fact 03: reveal the bridge question */
+      setBridgeShown(true);
+    } else {
+      /* Second tap: move on to Mission 1 */
+      onDone();
+    }
+  };
+
+  const t = TRIVIA[idx];
+
+  return (
+    <div
+      onClick={advance}
+      style={{
+        width: '100%', height: '100%',
+        position: 'relative',
+        color: T.ink, cursor: 'pointer',
+        overflow: 'hidden',
+      }}
+    >
+      <style>{`
+        @keyframes triviaIn {
+          from { opacity: 0; transform: translateY(28px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bridgeSlideUp {
+          from { opacity: 0; transform: translateY(48px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      {/* ── Painting background — pans + zooms per fact ── */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: `url('./painting.jpg')`,
+        backgroundSize: t.zoom.size,
+        backgroundPosition: t.zoom.pos,
+        backgroundRepeat: 'no-repeat',
+        transition: 'background-size 1.4s cubic-bezier(0.4, 0, 0.2, 1), background-position 1.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      }} />
+
+      {/* ── Translucent dark overlay so text stays readable ── */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'rgba(14, 14, 12, 0.72)',
+      }} />
+
+      {/* ── All UI content sits above the overlay ── */}
+      <div style={{
+        position: 'relative', zIndex: 1,
+        width: '100%', height: '100%',
+        display: 'flex', flexDirection: 'column',
+      }}>
+
+        {/* Header */}
+        <div style={{
+          padding: '20px 40px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          borderBottom: `1px solid rgba(255,255,255,0.18)`,
+          flexShrink: 0,
+        }}>
+          <SamLogo height={28} inverted />
+          <div style={{
+            display:'flex', alignItems:'center', gap: 8,
+            border: `2px solid ${T.ink}`,
+            padding: '6px 14px', borderRadius: 999,
+            fontFamily: MONO, fontWeight: 500, fontSize: 11,
+            letterSpacing: '0.06em', textTransform: 'uppercase',
+            color: T.ink,
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.highlight }}/>
+            <span>{teamName}</span>
+          </div>
+        </div>
+
+        {/* Eyebrow */}
+        <div style={{
+          padding: '28px 40px 0',
+          fontFamily: MONO, fontWeight: 500, fontSize: 11,
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+          color: T.highlight,
+          flexShrink: 0,
+        }}>
+          did you know
+        </div>
+
+        {/* Fact area — animates on each new fact */}
+        <div
+          key={animKey}
+          style={{
+            flex: 1,
+            display: 'flex', flexDirection: 'column',
+            justifyContent: 'center',
+            padding: '0 40px 24px',
+            animation: 'triviaIn 0.45s cubic-bezier(0.34,1.56,0.64,1)',
+          }}
+        >
+          {/* Giant index — Self Modern, faded vermillion */}
+          <div style={{
+            fontFamily: SERIF, fontWeight: 400,
+            fontSize: 160, lineHeight: 0.85,
+            color: T.highlight, opacity: 0.25,
+            letterSpacing: '-0.03em',
+            marginBottom: 16,
+            userSelect: 'none',
+            pointerEvents: 'none',
+          }}>
+            {t.index}
+          </div>
+
+          {/* The fact — large Cosmica */}
+          <p style={{
+            fontFamily: SANS, fontWeight: 500, fontSize: 30,
+            color: T.ink, lineHeight: 1.42,
+            letterSpacing: '-0.01em',
+            margin: 0,
+          }}>
+            {t.fact}
+          </p>
+
+        </div>
+
+        {/* ── "Your turn" bridge — slides up on first tap of fact 03 ── */}
+        {idx === TRIVIA.length - 1 && bridgeShown && (
+          <div style={{
+            flexShrink: 0,
+            padding: '28px 40px 32px',
+            background: 'rgba(8, 8, 6, 0.62)',
+            borderTop: `2px solid ${T.highlight}`,
+            animation: 'bridgeSlideUp 0.55s cubic-bezier(0.34,1.56,0.64,1)',
+          }}>
+            <div style={{
+              fontFamily: MONO, fontWeight: 500, fontSize: 11,
+              letterSpacing: '0.10em', textTransform: 'uppercase',
+              color: T.highlight, marginBottom: 14,
+            }}>your turn</div>
+            <div style={{
+              fontFamily: SERIF, fontWeight: 400, fontSize: 54,
+              color: T.ink, lineHeight: 0.98,
+              letterSpacing: '-0.02em',
+            }}>
+              so — what do you think<br/>the drama is?
+            </div>
+          </div>
+        )}
+
+        {/* Bottom nav */}
+        <div style={{
+          padding: '20px 40px 32px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          flexShrink: 0,
+          borderTop: `1px solid rgba(255,255,255,0.18)`,
+        }}>
+          {/* Pill dots */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {TRIVIA.map((_, i) => (
+              <div key={i} style={{
+                width: i === idx ? 28 : 8, height: 8,
+                borderRadius: 999,
+                background: i === idx ? T.highlight : 'rgba(255,255,255,0.3)',
+                transition: 'width 0.3s cubic-bezier(0.34,1.56,0.64,1), background 0.3s',
+              }}/>
+            ))}
+          </div>
+          <div style={{
+            fontFamily: MONO, fontWeight: 500, fontSize: 11,
+            letterSpacing: '0.08em', textTransform: 'uppercase',
+            color: T.inkSoft,
+          }}>
+            {!bridgeShown || idx < TRIVIA.length - 1 ? 'tap anywhere to continue →' : 'tap to weigh in →'}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   SCREEN 1: IDLE / LABEL
+   Museum placard aesthetic — clean white card,
+   left-aligned, no decorative UI chrome
+───────────────────────────────────────── */
+function IdleScreen({ onSave, onGame, tweaks }) {
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      background: '#FFFFFF',
+      display: 'flex', flexDirection: 'column',
+      color: '#1A1A18',
+    }}>
+      {/* Label card — white museum placard */}
+      <div style={{
+        flex: 1,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '60px 64px 32px',
+      }}>
+        <div style={{ width: '100%' }}>
+
+          {/* Artist name */}
+          <div style={{
+            fontFamily: SANS, fontWeight: 700, fontSize: 22,
+            color: '#1A1A18', letterSpacing: '0.01em',
+            lineHeight: 1.2, marginBottom: 6,
+          }}>
+            {tweaks.artistLabel}
+          </div>
+
+          {/* Artwork title */}
+          <div style={{
+            fontFamily: SERIF, fontWeight: 400,
+            fontSize: 52, color: '#1A1A18', lineHeight: 0.96,
+            letterSpacing: '-0.015em', marginBottom: 32,
+          }}>
+            Gathering at the House of Ichikawa Danjūrō VIII
+          </div>
+
+          {/* Metadata */}
+          <div style={{
+            fontFamily: MONO, fontSize: 12, fontWeight: 500,
+            color: '#6B6760', lineHeight: 1.6,
+            letterSpacing: '0.06em', textTransform: 'uppercase',
+            marginBottom: 4,
+          }}>
+            c. 1850s · woodblock print (ukiyo-e) · ink and color on paper
+          </div>
+          <div style={{
+            fontFamily: MONO, fontSize: 12, fontWeight: 500,
+            color: '#6B6760', lineHeight: 1.6,
+            letterSpacing: '0.06em', textTransform: 'uppercase',
+            marginBottom: 32,
+          }}>
+            Seattle Art Museum Collection
+          </div>
+
+          {/* Rule */}
+          <div style={{ height: 1, background: 'rgba(0,0,0,0.14)', marginBottom: 28 }} />
+
+          {/* Bio */}
+          <p style={{
+            fontFamily: SANS, fontSize: 21, fontWeight: 400,
+            color: '#3D3C3A', lineHeight: 1.6, margin: 0,
+          }}>
+            This print features the famous kabuki actor Ichikawa Danjūrō VIII (1823–1854)
+            alongside his brothers and guests. A major star of mid-19th century Japanese
+            popular culture, Danjūrō VIII died by suicide in 1854 — prints like this one
+            were sometimes made as shini-e, memorial images, in his honor. Look closely:
+            two vertical seams mark where separate sheets meet. Each color was printed
+            from its own carved woodblock. A scene this complex could require 20 or more
+            blocks, aligned with remarkable precision.
+          </p>
+        </div>
+      </div>
+
+      {/* Save & Game buttons */}
+      <div style={{ padding: '0 48px 48px', display: 'flex', gap: 12, justifyContent: 'center' }}>
+
+        {/* Save */}
+        <button onClick={onSave} style={{
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', gap: 7,
+          background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: 16,
+          padding: '14px 22px 12px', cursor: 'pointer',
+          transition: 'background 0.18s', minWidth: 88,
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.09)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
+          onMouseDown={e => e.currentTarget.style.background = 'rgba(0,0,0,0.13)'}
+          onMouseUp={e => e.currentTarget.style.background = 'rgba(0,0,0,0.09)'}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke={T.paper} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span style={{
+            fontFamily: MONO, fontWeight: 500, fontSize: 9,
+            letterSpacing: '0.08em', textTransform: 'uppercase', color: T.paper,
+          }}>Save</span>
+        </button>
+
+        {/* Play Game */}
+        <button onClick={onGame} style={{
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', gap: 7,
+          background: T.highlight, border: 'none', borderRadius: 16,
+          padding: '14px 22px 12px', cursor: 'pointer',
+          transition: 'background 0.18s', minWidth: 88,
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = T.highlightDeep}
+          onMouseLeave={e => e.currentTarget.style.background = T.highlight}
+          onMouseDown={e => e.currentTarget.style.background = '#7a1a0c'}
+          onMouseUp={e => e.currentTarget.style.background = T.highlightDeep}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="#fff" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="6" width="20" height="12" rx="5"/>
+            <path d="M7 10v4M5 12h4"/>
+            <circle cx="17" cy="11" r="1" fill="#fff" stroke="none"/>
+            <circle cx="15" cy="13" r="1" fill="#fff" stroke="none"/>
+          </svg>
+          <span style={{
+            fontFamily: MONO, fontWeight: 500, fontSize: 9,
+            letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff',
+          }}>Play Game</span>
+        </button>
+
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   SCREEN 2: UNLOCK
+───────────────────────────────────────── */
+const TEAM_NAMES = ['The Dreamers'];
+
+/* Placeholder responses from earlier teams — shown on the completion screen */
+const PAST_RESPONSES = [
+  {
+    team: 'the wanderers',
+    story: 'the woman in the center just found out she\'s been offered the lead role. everyone else is deciding whether to be happy for her.',
+    photo: './team-1.jpg',
+    time: '2:14 PM',
+  },
+  {
+    team: 'the dreamers',
+    story: 'an unexpected guest arrived. someone in the back already knows exactly why they\'re really here.',
+    photo: './team-2.jpg',
+    time: '1:52 PM',
+  },
+  {
+    team: 'the interpreters',
+    story: 'a letter arrived from the capital. the one holding the fan already read it.',
+    photo: './team-3.jpg',
+    time: '1:31 PM',
+  },
+];
+
+function UnlockScreen({ teamName, onComplete }) {
+  const [phase, setPhase] = React.useState(0);
+
+  React.useEffect(() => {
+    const t1 = setTimeout(() => setPhase(1), 500);
+    const t2 = setTimeout(() => setPhase(2), 1900);
+    const t3 = setTimeout(() => onComplete(), 2700);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
+
+  return (
+    <div style={{
+      width:'100%', height:'100%',
+      background: T.ink,
+      display:'flex', flexDirection:'column',
+      alignItems:'center', justifyContent:'center',
+      position:'relative', overflow:'hidden',
+    }}>
+      {/* Concentric rings in highlight color */}
+      {[0,1,2,3].map(i => (
+        <div key={i} style={{
+          position:'absolute',
+          width: 80 + i*200,
+          height: 80 + i*200,
+          borderRadius:'50%',
+          border:`1.5px solid rgba(255,225,77,${0.45 - i*0.09})`,
+          animation:`ringExpand 1.3s cubic-bezier(0.22,1,0.36,1) ${i*0.1}s both`,
+        }}/>
+      ))}
+
+      {/* SAM logo center pulse */}
+      <div style={{
+        position:'absolute', top:'50%', left:'50%',
+        transform: phase >= 1 ? 'translate(-50%, calc(-50% - 160px))' : 'translate(-50%, -50%)',
+        opacity: phase < 2 ? 1 : 0,
+        transition: 'transform 0.6s cubic-bezier(0.4,0,0.2,1), opacity 0.6s ease',
+      }}>
+        <SamLogo />
+      </div>
+
+      {/* Team name reveal */}
+      <div style={{
+        textAlign:'center', zIndex:2,
+        opacity: phase >= 1 ? 1 : 0,
+        transform: phase >= 1 ? 'translateY(0)' : 'translateY(12px)',
+        transition:'opacity 0.6s ease, transform 0.6s ease',
+      }}>
+        <div style={{
+          fontFamily: MONO, fontWeight: 500, fontSize: 11,
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+          color: T.highlight, marginBottom: 20,
+        }}>you&apos;re in</div>
+
+        <div style={{
+          fontFamily: SERIF,
+          fontSize: 64, fontWeight: 400,
+          color: T.paper, lineHeight: 0.95,
+          letterSpacing: '-0.015em',
+        }}>
+          {teamName}
+        </div>
+
+        <div style={{
+          fontFamily: SANS, fontSize: 16, fontWeight: 400,
+          color: T.inkMid,
+          marginTop: 18,
+        }}>
+          you&apos;re in the building
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes ringExpand {
+          from { transform: scale(0); opacity: 0; }
+          to   { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   SCREEN 3: MISSION 1
+───────────────────────────────────────── */
+function Mission1Screen({ teamName, onLock, tweaks }) {
+  const [story, setStory] = React.useState('');
+  const [listening, setListening] = React.useState(false);
+  const [locked, setLocked] = React.useState(false);
+  const recognitionRef = React.useRef(null);
+
+  /* Slide the bridge question up from off-screen bottom on mount —
+     starts from where it was sitting on the trivia screen */
+  const [bridgeUp, setBridgeUp] = React.useState(false);
+  React.useEffect(() => {
+    const t = setTimeout(() => setBridgeUp(true), 20);
+    return () => clearTimeout(t);
+  }, []);
+
+  /* Focus textarea after transition so iPad keyboard appears */
+  const textareaRef = React.useRef(null);
+  React.useEffect(() => {
+    const t = setTimeout(() => { textareaRef.current && textareaRef.current.focus(); }, 750);
+    return () => clearTimeout(t);
+  }, []);
+
+  const speechSupported = typeof window !== 'undefined' &&
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+  const toggleVoice = () => {
+    if (!speechSupported) return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (listening) {
+      recognitionRef.current && recognitionRef.current.stop();
+      setListening(false);
+      return;
+    }
+    const rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
+    recognitionRef.current = rec;
+    let base = story;
+    rec.onresult = (e) => {
+      let interim = '', final = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) final += t;
+        else interim += t;
+      }
+      if (final) base += (base ? ' ' : '') + final;
+      setStory(base + (interim ? (base ? ' ' : '') + interim : ''));
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    rec.start();
+    setListening(true);
+  };
+
+  React.useEffect(() => () => {
+    recognitionRef.current && recognitionRef.current.stop();
+  }, []);
+
+  const handleLock = () => {
+    if (!story.trim()) return;
+    recognitionRef.current && recognitionRef.current.stop();
+    setListening(false);
+    setLocked(true);
+    setTimeout(() => onLock(story.trim()), 600);
+  };
+
+  return (
+    <div style={{
+      width:'100%', height:'100%',
+      background: T.paper,
+      display:'flex', flexDirection:'column',
+      color: T.ink, position:'relative', overflow:'hidden',
+    }}>
+
+      {/* Header */}
+      <div style={{
+        padding:'20px 40px', display:'flex',
+        justifyContent:'space-between', alignItems:'center',
+        borderBottom: `1px solid ${T.rule}`,
+      }}>
+          <SamLogo height={28} inverted />
+        <div style={{
+          display:'flex', alignItems:'center', gap: 8,
+          border: `2px solid ${T.ink}`,
+          padding: '6px 14px', borderRadius: 999,
+          fontFamily: MONO, fontWeight: 500, fontSize: 11,
+          letterSpacing: '0.06em', textTransform: 'uppercase',
+          color: T.ink,
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.highlight }}/>
+          <span>{teamName}</span>
+        </div>
+      </div>
+
+      <div style={{ padding:'32px 40px 0', flex:1, display:'flex', flexDirection:'column' }}>
+
+        {/* Mission progress */}
+        <div style={{ display:'flex', alignItems:'center', gap: 12, marginBottom: 22 }}>
+          <div style={{
+            fontFamily: MONO, fontWeight: 500, fontSize: 11,
+            letterSpacing: '0.08em', textTransform: 'uppercase',
+            color: T.inkMid,
+          }}>01 / 02</div>
+          <div style={{ flex:1, display:'flex', gap: 4 }}>
+            <div style={{ flex:1, height: 2, background: T.ink, borderRadius: 2 }}/>
+            <div style={{ flex:1, height: 2, background: T.rule, borderRadius: 2, opacity: 0.4 }}/>
+          </div>
+        </div>
+
+        {/* Bridge question — travels up from the bottom of the previous screen */}
+        <div style={{
+          marginBottom: 20,
+          transform: bridgeUp ? 'translateY(0)' : 'translateY(860px)',
+          transition: 'transform 0.58s cubic-bezier(0.22, 0.9, 0.32, 1)',
+        }}>
+          <div style={{
+            fontFamily: MONO, fontWeight: 500, fontSize: 11,
+            letterSpacing: '0.10em', textTransform: 'uppercase',
+            color: T.highlight, marginBottom: 10,
+          }}>your turn</div>
+          <h2 style={{
+            fontFamily: SERIF,
+            fontSize: 48, fontWeight: 400, lineHeight: 0.96,
+            color: T.ink, letterSpacing: '-0.02em',
+            margin: 0,
+          }}>
+            so — what do you think<br/>the drama is?
+          </h2>
+        </div>
+
+        <p style={{
+          fontFamily: SANS,
+          fontSize: 16, fontWeight: 400, lineHeight: 1.5,
+          color: T.inkSoft,
+          marginBottom: 20, maxWidth: 540,
+        }}>
+          look at the painting. talk it out as a group. then tell us your most creative story.
+        </p>
+
+        {/* Story input — chalk card with 2px ink border */}
+        <div style={{ flex:1, display:'flex', flexDirection:'column' }}>
+          <div style={{ position:'relative', flex:1, minHeight: 200 }}>
+            <textarea
+              ref={textareaRef}
+              value={story}
+              onChange={e => !locked && setStory(e.target.value)}
+              readOnly={locked}
+              placeholder="tell us your juiciest story."
+              style={{
+                width:'100%', height:'100%',
+                minHeight: 200,
+                background: T.paperDim,
+                border: `2px solid ${listening ? T.highlight : T.ink}`,
+                borderRadius: 20,
+                padding: '22px 24px',
+                fontFamily: SANS,
+                fontSize: 18, fontWeight: 400, lineHeight: 1.55,
+                color: T.ink,
+                resize:'none',
+                outline:'none',
+                boxSizing:'border-box',
+                caretColor: T.ink,
+                transition: 'border-color 0.2s',
+              }}
+            />
+            {listening && (
+              <div style={{
+                position:'absolute', top:16, right:16,
+                display:'flex', alignItems:'center', gap:7,
+                background: T.highlight, color: T.paper,
+                padding: '5px 12px', borderRadius: 999,
+                fontFamily: MONO, fontWeight: 500, fontSize: 10,
+                letterSpacing: '0.06em', textTransform: 'uppercase',
+              }}>
+                <div style={{
+                  width: 6, height: 6, borderRadius:'50%', background: T.paper,
+                  animation: 'recPulse 1s ease-in-out infinite',
+                }}/>
+                listening
+              </div>
+            )}
+            {story.length > 0 && (
+              <div style={{
+                position:'absolute', bottom:12, right:16,
+                fontFamily: MONO, fontSize: 10,
+                letterSpacing: '0.04em', textTransform: 'uppercase',
+                color: T.inkMid,
+              }}>
+                {story.length} chars
+              </div>
+            )}
+          </div>
+
+          {/* Voice button */}
+          <button onClick={toggleVoice} style={{
+            marginTop: 10,
+            padding: '13px 22px',
+            borderRadius: 999,
+            border: `2px solid ${listening ? T.highlight : T.ink}`,
+            background: listening ? T.highlight : 'transparent',
+            color: listening ? T.paper : T.ink,
+            cursor: speechSupported ? 'pointer' : 'not-allowed',
+            opacity: speechSupported ? 1 : 0.4,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            fontFamily: MONO, fontWeight: 500, fontSize: 12,
+            letterSpacing: '0.06em', textTransform: 'uppercase',
+            transition: 'transform 280ms cubic-bezier(0.34,1.56,0.64,1)',
+          }}>
+            {/* mic icon */}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+              <rect x="9" y="2" width="6" height="12" rx="3"/>
+              <path d="M5 10a7 7 0 0 0 14 0M12 19v3M9 22h6"/>
+            </svg>
+            <span>{listening ? 'stop' : (speechSupported ? 'narrate with voice' : 'voice unavailable')}</span>
+          </button>
+        </div>
+
+        {/* Lock button */}
+        <div style={{ paddingBottom: 28, paddingTop: 14 }}>
+          <PillButton onClick={handleLock} disabled={!story.trim() || locked} variant="primary">
+            lock it in
+          </PillButton>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes recPulse {
+          0%,100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   SCREEN 4: MISSION 2
+───────────────────────────────────────── */
+function CameraPreview({ onCapture, countdown }) {
+  const videoRef = React.useRef(null);
+  const [camError, setCamError] = React.useState(false);
+
+  React.useEffect(() => {
+    let stream;
+    navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+      .then(s => {
+        stream = s;
+        if (videoRef.current) {
+          videoRef.current.srcObject = s;
+          videoRef.current.play();
+        }
+      })
+      .catch(() => setCamError(true));
+    return () => stream?.getTracks().forEach(t => t.stop());
+  }, []);
+
+  if (camError) {
+    return (
+      <div style={{
+        flex: 1, borderRadius: 20, overflow: 'hidden',
+        background: T.ink,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: 12,
+      }}>
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        <div style={{
+          fontFamily: SANS, fontSize: 13, fontWeight: 500,
+          color: 'rgba(255,255,255,0.5)', textAlign: 'center', maxWidth: 240,
+        }}>
+          camera access needed — allow it in your browser settings
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      flex: 1, borderRadius: 20, overflow: 'hidden',
+      position: 'relative', background: '#000',
+    }}>
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        style={{
+          width: '100%', height: '100%',
+          objectFit: 'cover',
+          transform: 'scaleX(-1)',
+        }}
+      />
+      {/* Live badge — hidden during countdown */}
+      {!countdown && (
+        <div style={{
+          position: 'absolute', top: 14, left: 14,
+          background: 'rgba(0,0,0,0.55)',
+          backdropFilter: 'blur(8px)',
+          color: T.paper,
+          padding: '5px 12px', borderRadius: 999,
+          fontFamily: MONO, fontSize: 10,
+          display: 'flex', alignItems: 'center', gap: 7,
+        }}>
+          <span style={{
+            width: 7, height: 7, borderRadius: '50%',
+            background: '#ff3b30',
+            animation: 'recPulse 1s ease-in-out infinite',
+          }}/>
+          live
+        </div>
+      )}
+
+      {/* Countdown overlaid on camera */}
+      {countdown !== null && countdown > 0 && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(0,0,0,0.55)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', gap: 12,
+        }}>
+          <div style={{
+            fontFamily: MONO, fontWeight: 500, fontSize: 11,
+            color: T.highlight, letterSpacing: '0.08em', textTransform: 'uppercase',
+          }}>
+            smile!
+          </div>
+          <div style={{
+            fontFamily: SERIF, fontSize: 160, fontWeight: 400,
+            color: T.ink, lineHeight: 1,
+            letterSpacing: '-0.02em',
+            animation: 'countPulse 0.9s ease-in-out',
+          }}>
+            {countdown}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Mission2Screen({ teamName, onCapture, tweaks }) {
+  const [countdown, setCountdown] = React.useState(null);
+
+  const startCountdown = () => setCountdown(10);
+
+  React.useEffect(() => {
+    if (countdown === null) return;
+    if (countdown === 0) { setTimeout(() => onCapture(), 400); return; }
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [countdown]);
+
+  return (
+    <div style={{
+      width:'100%', height:'100%',
+      background: T.paper,
+      display:'flex', flexDirection:'column',
+      color: T.ink, position:'relative', overflow:'hidden',
+    }}>
+
+      <style>{`@keyframes countPulse {
+        0%   { transform: scale(1.5); opacity: 0; }
+        40%  { transform: scale(1.0); opacity: 1; }
+        100% { transform: scale(0.8); opacity: 0.2; }
+      }`}</style>
+
+      {/* Header */}
+      <div style={{
+        padding:'20px 40px', display:'flex',
+        justifyContent:'space-between', alignItems:'center',
+        borderBottom: `1px solid ${T.rule}`,
+      }}>
+          <SamLogo height={28} inverted />
+        <div style={{
+          display:'flex', alignItems:'center', gap: 8,
+          border: `2px solid ${T.ink}`,
+          padding: '6px 14px', borderRadius: 999,
+          fontFamily: MONO, fontWeight: 500, fontSize: 11,
+          letterSpacing: '0.06em', textTransform: 'uppercase',
+          color: T.ink,
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.highlight }}/>
+          <span>{teamName}</span>
+        </div>
+      </div>
+
+      <div style={{ padding:'28px 40px 0', flex:1, display:'flex', flexDirection:'column' }}>
+
+        <div style={{ display:'flex', alignItems:'center', gap: 12, marginBottom: 18 }}>
+          <div style={{
+            fontFamily: MONO, fontWeight: 500, fontSize: 11,
+            letterSpacing: '0.08em', textTransform: 'uppercase', color: T.inkMid,
+          }}>02 / 02</div>
+          <div style={{ flex:1, display:'flex', gap: 4 }}>
+            <div style={{ flex:1, height: 2, background: T.ink, borderRadius: 2 }}/>
+            <div style={{ flex:1, height: 2, background: T.ink, borderRadius: 2 }}/>
+          </div>
+        </div>
+
+        <h2 style={{
+          fontFamily: SERIF, fontSize: 48, fontWeight: 400, lineHeight: 0.96,
+          color: T.ink, letterSpacing: '-0.015em', marginBottom: 12,
+        }}>
+          become the<br/>painting
+        </h2>
+
+        <p style={{
+          fontFamily: SANS, fontSize: 16, fontWeight: 400, lineHeight: 1.5,
+          color: T.inkSoft, marginBottom: 16, maxWidth: 540,
+        }}>
+          step back from the screen. strike your pose — then start the timer.
+        </p>
+
+        {/* Camera preview */}
+        <CameraPreview onCapture={onCapture} countdown={countdown} />
+
+        {/* Ready CTA */}
+        <div style={{ paddingBottom: 28, paddingTop: 16 }}>
+          <PillButton onClick={startCountdown} disabled={countdown !== null} variant="primary">
+            start the timer
+          </PillButton>
+          <div style={{
+            textAlign:'center', marginTop: 10,
+            fontFamily: MONO, fontSize: 10, fontWeight: 500,
+            letterSpacing: '0.06em', textTransform: 'uppercase',
+            color: T.inkFaint,
+          }}>
+            10-second countdown · step back
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   SCREEN 5: COMPLETION
+───────────────────────────────────────── */
+
+/* Small photo thumbnail with fallback to diagonal stripe */
+function PhotoThumb({ src, size = 88, radius = 14 }) {
+  const [err, setErr] = React.useState(false);
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: radius,
+      overflow: 'hidden', flexShrink: 0,
+      background: T.paperDeep,
+      border: `1.5px solid ${T.rule}`,
+      position: 'relative',
+    }}>
+      {!err ? (
+        <img src={src} onError={() => setErr(true)}
+          style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+      ) : (
+        <>
+          <div style={{
+            position:'absolute', inset:0,
+            backgroundImage: `repeating-linear-gradient(45deg, ${T.paperDim}, ${T.paperDim} 8px, ${T.paperDeep} 8px, ${T.paperDeep} 16px)`,
+          }}/>
+          <div style={{
+            position:'absolute', inset:0,
+            display:'flex', alignItems:'center', justifyContent:'center',
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke={T.inkFaint} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* Card for past team responses — photo top, text below, no border */
+function PastCard({ r }) {
+  const [photoErr, setPhotoErr] = React.useState(false);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* Photo */}
+      <div style={{ height: 160, borderRadius: 14, overflow: 'hidden', position: 'relative', background: T.paperDeep, flexShrink: 0 }}>
+        {!photoErr ? (
+          <img src={r.photo} onError={() => setPhotoErr(true)}
+            style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }} />
+        ) : (
+          <div style={{
+            position:'absolute', inset:0,
+            backgroundImage: `repeating-linear-gradient(45deg, ${T.paperDim}, ${T.paperDim} 8px, ${T.paperDeep} 8px, ${T.paperDeep} 16px)`,
+          }} />
+        )}
+      </div>
+      {/* Text */}
+      <div>
+        <div style={{
+          fontFamily: MONO, fontWeight: 500, fontSize: 10,
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+          color: T.inkMid, marginBottom: 4,
+        }}>{r.team}</div>
+        <p style={{
+          fontFamily: SANS, fontSize: 14, fontWeight: 400,
+          lineHeight: 1.45, color: T.inkSoft, margin: 0,
+        }}>"{r.story}"</p>
+      </div>
+    </div>
+  );
+}
+
+function CompletionScreen({ teamName, chosenPrompts, onReset, onSeeProgress, tweaks }) {
+  const [fadeIn, setFadeIn] = React.useState(false);
+  const [captureErr, setCaptureErr] = React.useState(false);
+  React.useEffect(() => { setTimeout(() => setFadeIn(true), 100); }, []);
+  const storyText = typeof chosenPrompts === 'string' ? chosenPrompts : '';
+  const timestamp = React.useRef(new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})).current;
+
+  return (
+    <div style={{
+      width:'100%', height:'100%',
+      background: T.paper,
+      display:'flex', flexDirection:'column',
+      color: T.ink, position:'relative', overflow:'hidden',
+      opacity: fadeIn ? 1 : 0,
+      transition:'opacity 0.6s ease',
+    }}>
+
+      {/* Header */}
+      <div style={{
+        padding:'20px 40px', display:'flex',
+        justifyContent:'space-between', alignItems:'center',
+        borderBottom: `1px solid ${T.rule}`,
+        flexShrink: 0,
+      }}>
+          <SamLogo height={28} inverted />
+        <div style={{
+          display:'flex', alignItems:'center', gap: 8,
+          background: T.highlight, color: T.paper,
+          border: `2px solid ${T.highlight}`,
+          padding: '6px 14px', borderRadius: 999,
+          fontFamily: MONO, fontWeight: 700, fontSize: 11,
+          letterSpacing: '0.06em', textTransform: 'uppercase',
+        }}>
+          <span>✓</span>
+          <span>done</span>
+        </div>
+      </div>
+
+      {/* ── Scrollable feed ── */}
+      <div style={{
+        flex: 1, overflowY: 'auto', overflowX: 'hidden',
+        padding: '28px 40px 40px',
+        display: 'flex', flexDirection: 'column',
+      }}>
+
+        <div style={{
+          fontFamily: MONO, fontWeight: 500, fontSize: 11,
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+          color: T.inkMid, marginBottom: 12,
+        }}>challenge complete</div>
+
+        <h1 style={{
+          fontFamily: SERIF,
+          fontSize: 52, fontWeight: 400, lineHeight: 0.96,
+          color: T.ink, letterSpacing: '-0.015em',
+          marginBottom: 6,
+        }}>
+          not bad,<br/>{teamName}
+        </h1>
+
+        <div style={{
+          fontFamily: SANS, fontSize: 16, fontWeight: 400,
+          color: T.inkSoft, marginBottom: 22,
+        }}>
+          your take is officially on record.
+        </div>
+
+        {/* ── Your captured group photo — big ── */}
+        <div style={{
+          height: 320,
+          flexShrink: 0,
+          border: `2px solid ${T.ink}`,
+          borderRadius: 20,
+          position:'relative',
+          marginBottom: 16,
+          overflow: 'hidden',
+          background: T.paperDeep,
+        }}>
+          {!captureErr ? (
+            <img src="./capture.jpg" onError={() => setCaptureErr(true)}
+              style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+          ) : (
+            <div style={{
+              position:'absolute', inset:0,
+              backgroundImage: `repeating-linear-gradient(45deg, ${T.paperDim}, ${T.paperDim} 14px, ${T.paperDeep} 14px, ${T.paperDeep} 28px)`,
+            }} />
+          )}
+          <div style={{ position:'absolute', inset:0 }}>
+            <div style={{
+              position:'absolute', top: 10, left: 10,
+              background: T.highlight, color: T.paper,
+              padding: '4px 10px', borderRadius: 999,
+              fontFamily: MONO, fontSize: 9,
+              letterSpacing: '0.06em', textTransform: 'uppercase',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.paper }}/>
+              captured
+            </div>
+            <div style={{
+              position:'absolute', bottom: 10, right: 12,
+              fontFamily: MONO, fontSize: 9,
+              letterSpacing: '0.04em', textTransform: 'uppercase',
+              color: T.inkMid,
+            }}>
+              {timestamp}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Your interpretation ── */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{
+            fontFamily: MONO, fontWeight: 500, fontSize: 10,
+            letterSpacing: '0.08em', textTransform: 'uppercase',
+            color: T.inkMid, marginBottom: 10,
+          }}>your interpretation</div>
+          {storyText ? (
+            <div style={{
+              padding: '18px 22px',
+              background: T.paperDim,
+              border: `2px solid ${T.ink}`,
+              borderRadius: 20,
+              boxShadow: `4px 4px 0 ${T.highlight}`,
+            }}>
+              <p style={{
+                fontFamily: SANS,
+                fontSize: 16, fontWeight: 400, lineHeight: 1.55,
+                color: T.ink,
+              }}>
+                "{storyText}"
+              </p>
+            </div>
+          ) : (
+            <div style={{ fontFamily: SANS, fontSize: 14, color: T.inkFaint }}>
+              no story recorded
+            </div>
+          )}
+        </div>
+
+        {/* ── Section divider: all takes ── */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 14,
+          marginBottom: 20,
+        }}>
+          <div style={{ flex: 1, height: 1, background: T.rule, opacity: 0.4 }} />
+          <div style={{
+            fontFamily: MONO, fontWeight: 500, fontSize: 10,
+            letterSpacing: '0.08em', textTransform: 'uppercase',
+            color: T.inkMid, whiteSpace: 'nowrap',
+          }}>all takes · today</div>
+          <div style={{ flex: 1, height: 1, background: T.rule, opacity: 0.4 }} />
+        </div>
+
+        {/* ── Past team responses — 2-column card grid ── */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr',
+          gap: 14, marginBottom: 32,
+        }}>
+          {PAST_RESPONSES.map((r, i) => <PastCard key={i} r={r} />)}
+        </div>
+
+        {/* ── See your progress ── */}
+        <PillButton onClick={onSeeProgress} variant="primary">
+          see your progress →
+        </PillButton>
+
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   SCREEN 6: PROGRESS MAP
+───────────────────────────────────────── */
+function ProgressScreen({ teamName, onReturn }) {
+  const [mapErr, setMapErr] = React.useState(false);
+  const [fadeIn, setFadeIn] = React.useState(false);
+  React.useEffect(() => { setTimeout(() => setFadeIn(true), 80); }, []);
+
+  return (
+    <div style={{
+      width:'100%', height:'100%',
+      background: T.paper,
+      display:'flex', flexDirection:'column',
+      color: T.ink, overflow:'hidden',
+      opacity: fadeIn ? 1 : 0,
+      transition: 'opacity 0.5s ease',
+    }}>
+
+      {/* Header */}
+      <div style={{
+        padding:'20px 40px', display:'flex',
+        justifyContent:'space-between', alignItems:'center',
+        borderBottom: `1px solid ${T.rule}`,
+        flexShrink: 0,
+      }}>
+          <SamLogo height={28} inverted />
+        <div style={{
+          display:'flex', alignItems:'center', gap: 8,
+          border: `2px solid ${T.ink}`,
+          padding: '6px 14px', borderRadius: 999,
+          fontFamily: MONO, fontWeight: 500, fontSize: 11,
+          letterSpacing: '0.06em', textTransform: 'uppercase',
+          color: T.ink,
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.highlight }}/>
+          <span>{teamName}</span>
+        </div>
+      </div>
+
+      {/* Scrollable content */}
+      <div style={{
+        flex: 1, overflowY: 'auto', overflowX: 'hidden',
+        padding: '28px 40px 48px',
+        display: 'flex', flexDirection: 'column', gap: 24,
+      }}>
+
+        <div>
+          <div style={{
+            fontFamily: MONO, fontWeight: 500, fontSize: 11,
+            letterSpacing: '0.08em', textTransform: 'uppercase',
+            color: T.inkMid, marginBottom: 10,
+          }}>your journey</div>
+          <h1 style={{
+            fontFamily: SERIF, fontSize: 48, fontWeight: 400,
+            lineHeight: 1.0, letterSpacing: '-0.015em',
+            color: T.ink, margin: 0,
+          }}>
+            Only 1 step away from collecting your personalized memorabilia!!
+          </h1>
+        </div>
+
+        {/* Progress map image */}
+        <div style={{
+          width: '100%', borderRadius: 20,
+          overflow: 'hidden', flexShrink: 0,
+          border: `2px solid ${T.ink}`,
+          background: T.paperDeep,
+          position: 'relative',
+        }}>
+          {!mapErr ? (
+            <img
+              src="./progress-map.jpg"
+              onError={() => setMapErr(true)}
+              style={{ width:'100%', display:'block' }}
+            />
+          ) : (
+            <div style={{
+              height: 320,
+              backgroundImage: `repeating-linear-gradient(45deg, ${T.paperDim}, ${T.paperDim} 14px, ${T.paperDeep} 14px, ${T.paperDeep} 28px)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <div style={{
+                fontFamily: MONO, fontSize: 10,
+                letterSpacing: '0.06em', textTransform: 'uppercase',
+                color: T.inkMid, textAlign: 'center',
+              }}>
+                progress-map.jpg
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Return to label */}
+        <PillButton onClick={onReturn} variant="primary">
+          ↺ return to label
+        </PillButton>
+
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   NFC WAITING SCREEN
+   Shown after Save or Game button tap.
+   mode: 'save' | 'game'
+───────────────────────────────────────── */
+function NfcScreen({ mode, onTap }) {
+  const isSave = mode === 'save';
+
+  const bg           = isSave ? '#F5F4F0'                    : T.paper;
+  const headingC     = isSave ? T.paper                      : T.ink;
+  const subC         = isSave ? T.inkFaint                   : T.inkMid;
+  const hintC        = isSave ? 'rgba(50,49,49,0.35)'        : T.inkFaint;
+  const tabletStroke = isSave ? 'rgba(50,49,49,0.18)'        : 'rgba(255,255,255,0.18)';
+  const tabletFill   = isSave ? 'rgba(50,49,49,0.06)'        : 'rgba(255,255,255,0.06)';
+  const brochureFill = isSave ? '#ffffff'                     : T.paperDim;
+  const brochureStroke = isSave ? 'rgba(50,49,49,0.15)'      : 'rgba(255,255,255,0.15)';
+  const lineC        = isSave ? 'rgba(50,49,49,0.15)'        : 'rgba(255,255,255,0.15)';
+
+  return (
+    <div
+      onClick={onTap}
+      style={{
+        width: '100%', height: '100%',
+        background: bg,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', position: 'relative', overflow: 'hidden',
+      }}
+    >
+      <style>{`
+        @keyframes brochureTap {
+          0%   { transform: translateY(0px)  rotate(-6deg); }
+          38%  { transform: translateY(98px) rotate(0deg); }
+          54%  { transform: translateY(98px) rotate(0deg); }
+          100% { transform: translateY(0px)  rotate(-6deg); }
+        }
+        @keyframes tapGlow {
+          0%,35%,100% { opacity: 0; r: 14; }
+          45%,52%     { opacity: 1; r: 22; }
+        }
+        @keyframes nfcWave {
+          0%,30%   { opacity: 0; transform: scale(0.7); }
+          45%,50%  { opacity: 1; transform: scale(1);   }
+          65%,100% { opacity: 0; transform: scale(1.4); }
+        }
+      `}</style>
+
+      {/* Brochure-tapping-tablet illustration */}
+      <div style={{ position: 'relative', width: 200, height: 260, marginBottom: 24 }}>
+        <svg width="200" height="260" viewBox="0 0 200 260" fill="none" overflow="visible">
+          {/* iPad portrait */}
+          <rect x="48" y="106" width="104" height="139" rx="14"
+            fill={tabletFill} stroke={tabletStroke} strokeWidth="1.5"/>
+          <circle cx="100" cy="116" r="3.5" fill={tabletStroke}/>
+          <rect x="80" y="235" width="40" height="4" rx="2" fill={tabletStroke}/>
+          <circle cx="100" cy="182" r="9"
+            fill="none" stroke={T.highlight} strokeWidth="1.5" strokeDasharray="3 2"/>
+          <circle cx="100" cy="182" r="18" fill={T.highlight} opacity="0"
+            style={{ animation: 'tapGlow 2.4s 0.1s cubic-bezier(0.4,0,0.2,1) infinite' }}/>
+          {[0,1,2].map(i => (
+            <circle key={i} cx="100" cy="182" r={18 + i * 14}
+              fill="none" stroke={T.highlight} strokeWidth="1" opacity="0"
+              style={{ animation: `nfcWave 2.4s ${0.15 + i * 0.18}s ease-out infinite` }}/>
+          ))}
+          {/* Brochure card */}
+          <g style={{
+            animation: 'brochureTap 2.4s cubic-bezier(0.4,0,0.2,1) infinite',
+            transformOrigin: '100px 54px',
+          }}>
+            <rect x="66" y="10" width="68" height="88" rx="8"
+              fill={brochureFill} stroke={brochureStroke} strokeWidth="1.5"/>
+            <rect x="76" y="24" width="48" height="5" rx="2.5" fill={lineC}/>
+            <rect x="76" y="34" width="36" height="4" rx="2"   fill={lineC}/>
+            <rect x="76" y="47" width="48" height="3" rx="1.5" fill={lineC}/>
+            <rect x="76" y="55" width="40" height="3" rx="1.5" fill={lineC}/>
+            <rect x="76" y="63" width="44" height="3" rx="1.5" fill={lineC}/>
+            <circle cx="100" cy="84" r="10" fill={T.highlight} opacity="0.92"/>
+            <circle cx="100" cy="84" r="5"  fill="rgba(255,255,255,0.30)"/>
+          </g>
+        </svg>
+      </div>
+
+      {/* Text */}
+      <div style={{ textAlign: 'center', padding: '0 56px', position: 'relative', zIndex: 1 }}>
+        <div style={{
+          fontFamily: MONO, fontWeight: 500, fontSize: 11,
+          letterSpacing: '0.10em', textTransform: 'uppercase',
+          color: T.highlight, marginBottom: 14,
+        }}>
+          {isSave ? 'save to collection' : 'start game'}
+        </div>
+        <div style={{
+          fontFamily: SERIF, fontSize: 40, fontWeight: 400,
+          lineHeight: 1.1, letterSpacing: '-0.015em',
+          color: headingC, marginBottom: 16,
+        }}>
+          Tap your NFC sticker
+        </div>
+        <div style={{
+          fontFamily: SANS, fontSize: 17, fontWeight: 400,
+          color: subC, lineHeight: 1.5,
+        }}>
+          {isSave
+            ? 'Hold your sticker near the reader to save this painting to your collection.'
+            : 'Hold your sticker near the reader to begin the game.'}
+        </div>
+      </div>
+
+      <div style={{
+        position: 'absolute', bottom: 40,
+        fontFamily: MONO, fontSize: 10, fontWeight: 500,
+        letterSpacing: '0.07em', textTransform: 'uppercase',
+        color: hintC,
+      }}>
+        tap anywhere to simulate NFC tap
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   SAVING SCREEN
+───────────────────────────────────────── */
+function SavingScreen({ onDone, teamName }) {
+  const [phase, setPhase] = React.useState(0);
+
+  React.useEffect(() => {
+    const t1 = setTimeout(() => setPhase(1), 900);
+    const t2 = setTimeout(() => onDone(), 2600);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      background: T.paper,
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      color: T.ink, gap: 32,
+    }}>
+      <style>{`
+        @keyframes checkDraw {
+          from { stroke-dashoffset: 40; opacity: 0; }
+          to   { stroke-dashoffset: 0;  opacity: 1; }
+        }
+        @keyframes thumbIn {
+          from { opacity: 0; transform: scale(0.88) translateY(16px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes savingPulse {
+          0%,100% { opacity: 0.5; }
+          50%     { opacity: 1; }
+        }
+      `}</style>
+
+      {/* Painting thumbnail + check badge */}
+      <div style={{ position: 'relative', animation: 'thumbIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}>
+        <div style={{
+          width: 200, height: 148,
+          borderRadius: 16, overflow: 'hidden',
+          border: `2px solid rgba(255,255,255,0.15)`,
+          boxShadow: '0 16px 48px rgba(0,0,0,0.5)',
+          backgroundImage: "url('./painting.jpg')",
+          backgroundSize: 'cover', backgroundPosition: 'center',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: -14, right: -14,
+          width: 44, height: 44, borderRadius: '50%',
+          background: phase >= 1 ? T.highlight : T.paperDim,
+          border: `3px solid ${T.paper}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'background 0.4s ease',
+        }}>
+          {phase < 1 ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke={T.inkMid} strokeWidth="2.5" strokeLinecap="round"
+              style={{ animation: 'savingPulse 1s ease-in-out infinite' }}>
+              <circle cx="12" cy="12" r="9" strokeDasharray="4 3"/>
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="4 12 9 17 20 6"
+                strokeDasharray="40" strokeDashoffset="0"
+                style={{ animation: 'checkDraw 0.45s 0.05s cubic-bezier(0.4,0,0.2,1) both' }}/>
+            </svg>
+          )}
+        </div>
+      </div>
+
+      {/* Status text */}
+      <div style={{ textAlign: 'center', padding: '0 48px' }}>
+        <div style={{
+          fontFamily: SERIF, fontSize: 36, fontWeight: 400,
+          lineHeight: 1.1, letterSpacing: '-0.015em',
+          color: T.ink, marginBottom: 16,
+          transition: 'opacity 0.4s',
+        }}>
+          {phase < 1 ? 'Saving…' : 'Painting saved to your collection'}
+        </div>
+        {teamName && (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            border: `1.5px solid rgba(255,255,255,0.22)`,
+            padding: '6px 16px', borderRadius: 999,
+            fontFamily: MONO, fontWeight: 500, fontSize: 11,
+            letterSpacing: '0.06em', textTransform: 'uppercase',
+            color: T.inkSoft, marginBottom: 16,
+            opacity: phase >= 1 ? 1 : 0, transition: 'opacity 0.5s 0.15s',
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.highlight, flexShrink: 0 }}/>
+            {teamName}
+          </div>
+        )}
+        <div style={{
+          fontFamily: SANS, fontSize: 16, fontWeight: 400,
+          color: T.inkMid, lineHeight: 1.5,
+          opacity: phase >= 1 ? 1 : 0, transition: 'opacity 0.5s 0.3s',
+        }}>
+          Gathering at the House of Ichikawa Danjūrō VIII is now in your collection.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   COLLECTION SCREEN — My SAM Collection
+───────────────────────────────────────── */
+function CollectionScreen({ onReturn }) {
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      background: '#ffffff',
+      display: 'flex', flexDirection: 'column', color: T.paper,
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '28px 40px 24px',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        borderBottom: '1px solid rgba(0,0,0,0.08)', flexShrink: 0,
+      }}>
+        <SamLogo height={28} inverted={false} />
+        <div style={{
+          fontFamily: MONO, fontWeight: 700, fontSize: 10,
+          letterSpacing: '0.10em', textTransform: 'uppercase',
+          color: 'rgba(50,49,49,0.45)',
+        }}>your collection</div>
+      </div>
+
+      {/* Title */}
+      <div style={{ padding: '32px 40px 24px', flexShrink: 0 }}>
+        <div style={{
+          fontFamily: MONO, fontSize: 11, fontWeight: 500,
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+          color: T.inkMid, marginBottom: 10,
+        }}>saved paintings</div>
+        <div style={{
+          fontFamily: SERIF, fontSize: 44, fontWeight: 400,
+          lineHeight: 1.05, letterSpacing: '-0.015em', color: T.paper,
+        }}>
+          My SAM<br />Collection
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div style={{
+        flex: 1, overflowY: 'auto',
+        padding: '0 40px 40px',
+        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        gap: 16, alignContent: 'start',
+      }}>
+
+        {/* Saved: Kunisada */}
+        <div style={{
+          borderRadius: 16, overflow: 'hidden',
+          border: '1.5px solid rgba(0,0,0,0.10)',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+        }}>
+          <div style={{
+            height: 140,
+            backgroundImage: "url('./painting.jpg')",
+            backgroundSize: 'cover', backgroundPosition: 'center',
+          }} />
+          <div style={{ padding: '12px 14px 14px', background: '#fff' }}>
+            <div style={{
+              fontFamily: MONO, fontSize: 9, fontWeight: 600,
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+              color: T.highlight, marginBottom: 4,
+            }}>saved</div>
+            <div style={{ fontFamily: SERIF, fontSize: 16, fontWeight: 400, color: T.paper, lineHeight: 1.2 }}>
+              Gathering at the House of Ichikawa Danjūrō VIII
+            </div>
+            <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 400, color: T.inkMid, marginTop: 3 }}>
+              Utagawa Kunisada I
+            </div>
+          </div>
+        </div>
+
+        {/* Placeholder slots */}
+        {[
+          { img: './painting-2.jpg', title: 'The Studio', artist: 'Jacob Lawrence' },
+          { img: './painting-3.jpg', title: 'Sea Change', artist: 'Jackson Pollock' },
+        ].map((p, i) => (
+          <div key={i} style={{
+            borderRadius: 16, overflow: 'hidden',
+            border: '1.5px solid rgba(0,0,0,0.10)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+          }}>
+            <div style={{
+              height: 140,
+              backgroundImage: `url('${p.img}')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundColor: T.paperDeep,
+            }} />
+            <div style={{ padding: '12px 14px 14px', background: '#fff' }}>
+              <div style={{
+                fontFamily: MONO, fontSize: 9, fontWeight: 600,
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                color: T.highlight, marginBottom: 4,
+              }}>saved</div>
+              <div style={{ fontFamily: SERIF, fontSize: 16, fontWeight: 400, color: T.paper, lineHeight: 1.2 }}>{p.title}</div>
+              <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 400, color: T.inkMid, marginTop: 3 }}>{p.artist}</div>
+            </div>
+          </div>
+        ))}
+
+      </div>
+
+      {/* Return button */}
+      <div style={{ padding: '0 40px 40px', flexShrink: 0 }}>
+        <button onClick={onReturn} style={{
+          width: '100%', padding: '18px 28px',
+          background: T.paper, border: 'none', borderRadius: 999,
+          fontFamily: SANS, fontWeight: 600, fontSize: 16,
+          color: T.ink, cursor: 'pointer', letterSpacing: '0.01em',
+          transition: 'background 0.18s, transform 0.18s',
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = T.paperDim}
+          onMouseLeave={e => e.currentTarget.style.background = T.paper}
+          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+          onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          ← back to painting
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   MAIN APP
+───────────────────────────────────────── */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "darkMode": false,
+  "artistLabel": "Utagawa Kunisada I (Toyokuni III)",
+  "teamPrefix": "the"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
+  const [screen, setScreen] = React.useState('idle');
+  const [teamName, setTeamName] = React.useState('');
+  const [chosenPrompts, setChosenPrompts] = React.useState('');
+
+  const scale = useScaleToFit(768, 1024);
+
+  /* ── Save flow ── */
+  const handleSaveClick      = () => setScreen('nfc-save');
+  const handleNfcSave        = () => { if (!teamName) setTeamName(TEAM_NAMES[0]); setScreen('saving'); };
+  const handleSavingDone     = () => setScreen('collection');
+  const handleCollectionReturn = () => setScreen('idle');
+
+  /* ── Game flow ── */
+  const handleGameClick  = () => setScreen('nfc-game');
+  const handleNfcGame    = () => {
+    const name = TEAM_NAMES[Math.floor(Math.random() * TEAM_NAMES.length)];
+    setTeamName(name);
+    setChosenPrompts('');
+    setScreen('unlock');
+  };
+  const handleUnlockDone   = () => setScreen('trivia');
+  const handleTriviaDone   = () => setScreen('mission1');
+  const handleLockStory    = (story) => { setChosenPrompts(story); setScreen('mission2'); };
+  const handleCapture      = () => setScreen('completion');
+  const handleSeeProgress  = () => setScreen('progress');
+  const handleReset        = () => { setTeamName(''); setChosenPrompts(''); setScreen('idle'); };
+
+  const renderScreen = () => {
+    switch (screen) {
+      case 'idle':       return <IdleScreen onSave={handleSaveClick} onGame={handleGameClick} tweaks={tweaks} />;
+      case 'nfc-save':   return <NfcScreen mode="save" onTap={handleNfcSave} />;
+      case 'saving':     return <SavingScreen onDone={handleSavingDone} teamName={teamName} />;
+      case 'collection': return <CollectionScreen onReturn={handleCollectionReturn} />;
+      case 'nfc-game':   return <NfcScreen mode="game" onTap={handleNfcGame} />;
+      case 'unlock':     return <UnlockScreen teamName={teamName} onComplete={handleUnlockDone} />;
+      case 'trivia':     return <TriviaScreen teamName={teamName} onDone={handleTriviaDone} />;
+      case 'mission1':   return <Mission1Screen teamName={teamName} onLock={handleLockStory} tweaks={tweaks} />;
+      case 'mission2':   return <Mission2Screen teamName={teamName} onCapture={handleCapture} tweaks={tweaks} />;
+      case 'completion': return <CompletionScreen teamName={teamName} chosenPrompts={chosenPrompts} onReset={handleReset} onSeeProgress={handleSeeProgress} tweaks={tweaks} />;
+      case 'progress':   return <ProgressScreen teamName={teamName} onReturn={handleReset} />;
+      default: return null;
+    }
+  };
+
+  /* Tweaks panel jump-to-screen */
+  const screenLabels  = ['idle','nfc-save','saving','collection','nfc-game','unlock','trivia','mission 1','mission 2','complete','progress'];
+  const screenKeys    = ['idle','nfc-save','saving','collection','nfc-game','unlock','trivia','mission1','mission2','completion','progress'];
+  const currentLabel  = screenLabels[screenKeys.indexOf(screen)] || 'idle';
+
+  return (
+    <>
+      <div style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center center',
+        transition: 'transform 0.2s ease',
+      }}>
+        <div className="tablet-shell" data-screen-label={`Tablet — ${screen}`}>
+          {/* Status pill */}
+          <div style={{
+            position:'absolute', top:14, left:0, right:0,
+            display:'flex', justifyContent:'center',
+            zIndex:100, pointerEvents:'none',
+          }}>
+            <div style={{
+              width:100, height:5,
+              background:'rgba(255,255,255,0.15)',
+              borderRadius:10,
+            }}/>
+          </div>
+
+          <div className="tablet-screen">
+            <div style={{ position:'absolute', inset:0 }}>
+              {renderScreen()}
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          textAlign:'center', marginTop: 18,
+          fontFamily: MONO, fontSize: 10, letterSpacing:'0.04em',
+          color: 'rgba(255,255,255,0.25)',
+        }}>
+          SAM · Breadcrumbs · tablet prototype
+        </div>
+      </div>
+
+      <window.TweaksPanel>
+        <window.TweakSection label="content" />
+        <window.TweakText
+          label="artist label"
+          value={tweaks.artistLabel}
+          onChange={v => setTweak('artistLabel', v)}
+        />
+        <window.TweakSection label="screens" />
+        <window.TweakSelect
+          label="jump to screen"
+          options={screenLabels}
+          value={currentLabel}
+          onChange={v => {
+            const target = screenKeys[screenLabels.indexOf(v)] || 'idle';
+            if (!['idle','nfc-save','saving','collection','nfc-game'].includes(target) && !teamName)
+              setTeamName(TEAM_NAMES[0]);
+            setScreen(target);
+          }}
+        />
+      </window.TweaksPanel>
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
